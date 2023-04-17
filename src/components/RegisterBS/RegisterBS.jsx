@@ -1,5 +1,5 @@
-import { getAuth, signInWithEmailAndPassword, } from 'firebase/auth';
-import React, { useState } from 'react';
+import { getAuth, sendPasswordResetEmail, signInWithEmailAndPassword, } from 'firebase/auth';
+import React, { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import app from '../firebase/firebase.config';
 
@@ -9,6 +9,7 @@ const auth = getAuth(app)
 const RegisterBS = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const emailRef = useRef()
   const handlePasswordBS = (event) => {
     event.preventDefault();
     const from =event.target;
@@ -33,10 +34,30 @@ const RegisterBS = () => {
     signInWithEmailAndPassword(auth, email, password)
     .then(result =>{
       const loggedUser = result.user
+      console.log(loggedUser)
+      if(!loggedUser.emailVerified){
+
+      }
       setSuccess('User Login Success full')
       setError('')
     })
     .catch(error => {
+      setError(error.message)
+    })
+   
+  }
+  const handleResetPassword = (event) =>{
+    const email = emailRef.current.value;
+    if(!email){
+      alert('Please provide your email address to reset password')
+      return
+    }
+    sendPasswordResetEmail(auth, email)
+    .then(()=>{
+      alert('Please check your email')
+    })
+    .catch(error=>{
+      console.log(error)
       setError(error.message)
     })
   }
@@ -46,7 +67,7 @@ const RegisterBS = () => {
       <form onSubmit={handlePasswordBS}>
         <div className="mb-3">
           <label for="exampleInputEmail1" className="form-label">Email address</label>
-          <input type="email" name='email' className="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" required />
+          <input type="email" name='email' ref={emailRef} className="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" required />
           <div id="emailHelp" className="form-text">We'll never share your email with anyone else.</div>
         </div>
         <div className="mb-3">
@@ -59,6 +80,7 @@ const RegisterBS = () => {
         </div>
         <button type="submit" className="btn btn-primary">Submit</button>
       </form>
+      <p><small>Forget Password? Please <button onClick={handleResetPassword} className='btn btn-link'>Reset Password</button></small></p>
       <p><small>New to this website? Please <Link to='/resister'>Register</Link></small></p>
       <p className='text-danger'>{error}</p>
       <p className='text-success'>{success}</p>
